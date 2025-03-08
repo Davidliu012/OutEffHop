@@ -231,7 +231,6 @@ def main():
             attn_gate_linear_all_features=args.attn_gate_linear_all_features,
             fine_tuning=args.fine_tuning,
         )
-
     # We resize the embeddings only when necessary to avoid index errors. If you are creating a model from scratch
     # on a small vocab and want a smaller embedding size, remove this test.
     embedding_size = model.get_input_embeddings().weight.shape[0]
@@ -480,9 +479,19 @@ def main():
     )
 
     # Prepare everything with our `accelerator`.
+    # check_device = torch.cuda.is_available()
+    # logger.info(f"Check Device: {str(check_device)}")
+    # check_torch = torch.version
+    # logger.info(f"Check Torch: {str(check_torch)}")
+    # check_cuda = torch.version.cuda
+    # logger.info(f"Check CUDA: {str(check_cuda)}")
+    # debug_current_device = next(model.parameters()).device
+    # logger.info(f"{str(debug_current_device)}")
     model, optimizer, train_dataloader, eval_dataloader, lr_scheduler = accelerator.prepare(
         model, optimizer, train_dataloader, eval_dataloader, lr_scheduler
     )
+    # debug_current_device = next(model.parameters()).device
+    # logger.info(f"{str(debug_current_device)}")
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
     num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
@@ -566,6 +575,7 @@ def main():
 
         for step, batch in enumerate(train_dataloader):
             # We need to skip steps until we reach the resumed step
+            # logger.info(f"Current step: {step}")
             if (
                 args.resume_from_checkpoint
                 and epoch == starting_epoch
@@ -575,8 +585,9 @@ def main():
                 N_total_loss -= 1
                 del batch
                 continue
-
+            
             with accelerator.accumulate(model):
+                # batch["input_ids"].shape --> torch.Size([48, 512])
                 outputs = model(**batch)
                 loss = outputs.loss
                 
@@ -585,7 +596,7 @@ def main():
                     total_loss += loss.detach().float().item()
                 accelerator.log({"train_loss": loss}, step = completed_steps)
                 accelerator.backward(loss)
-
+                
                 # grad clipping
                 if (
                     args.max_grad_norm is not None

@@ -1,4 +1,7 @@
 *.csv
+.hf_cache/
+.hf_data/
+
 OutEffHop/output/
 OutEffHop/output_metrics/
 *.json
