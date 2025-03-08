@@ -704,7 +704,8 @@ def main():
 
             if completed_steps >= args.max_train_steps:
                 break
-
+            
+        logger.info("Finish Epoch ---")
         # ---------------------------------
 
         act_dict_eval = attach_act_hooks_for_eval(model)
@@ -783,6 +784,8 @@ def main():
             if args.output_dir is not None:
                 output_dir = os.path.join(args.output_dir, output_dir)
             accelerator.save_state(output_dir)
+            
+    logger.info("Finish Pre-training!")
 
     if args.with_tracking:
         accelerator.end_training()
